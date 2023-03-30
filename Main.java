@@ -2,72 +2,74 @@ package Module11;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-
-
 public class Main {
-
     public static void main(String[] args) {
-        //1
         List<String> list = Arrays.asList("Ivan", "Alexander", "Peter", "Bryan", "Mike");
-        for (int i = 0; i< list.size();i++){
-            if (i % 2 == 0){
-                System.out.print((i+1)+"."+list.get(i)+" ");
-            }
-        }
-        //2
-        List<String> sortedReverse = list.stream().map(a -> a.toUpperCase(Locale.ROOT)).sorted((o1, o2) -> -o1.compareTo(o2)).collect(Collectors.toList());
-        System.out.println();
-        System.out.println(sortedReverse);
-        //3
-        String[] array = new String[] {"1, 2, 0", "4, 5"};
-        List<String> list1 = Arrays.asList("1, 2, 0", "4, 5");
-        List<Integer> listOfNums = new ArrayList<>();
-        for(int i = 0; i< array.length;i++){
-            String[] arr = array[i].split(", ");
-            for(int j = 0; j < arr.length;j++){
-                String[] arr1 = arr[j].split(",");
-                for(int k = 0; k < arr1.length; k++){
-                    listOfNums.add(Integer.valueOf((arr1[k])));
-                }
-            }
-        }
-        List<Integer> sortedList = (List<Integer>) listOfNums.stream().sorted().collect(Collectors.toList());
-        System.out.println(sortedList);
-        //4
-        System.out.println(generate(25214903917L, 11L, (Math.pow(2, 48))));
-        Stream<String> s1 = Arrays.stream(new String[]{"A", "B", "C"});
-        Stream<String> s2 = Arrays.stream(new String[]{"D", "E", "F"});
-        System.out.println(zip(s1, s2).collect(Collectors.toList()));
+        System.out.println("Task 1:");
+        System.out.println(getNamesWithOddIndexes(list));
+        System.out.println("Task 2:");
+        System.out.println(getListOfNamesInUpperCaseReverseSorted(list));
+        String[] arr = {"1, 2, 0", "4, 5"};
+        System.out.println("Task 3:");
+        System.out.println(getSortedStringArrayOfNumbers(arr));
+        Stream<Long> randomStream = getGeneratedStreamOfRandomNumbers(11L, (long) Math.pow(2, 48), 25214903917L);
+        System.out.println("Task 4:");
+        System.out.println(randomStream.limit(10).toList());
+        Stream<Integer> first = Stream.of(1,2,4,5,3);
+        Stream<Integer> second = Stream.of(4,5,3,3);
+        System.out.println("Task 5:");
+        Stream<Integer> zipped = zip(first, second);
+        zipped.forEach(s -> System.out.format("%s ", s));
+
+
 
     }
 
-    static List<Long> generate(long seed, long c, double m){
-        return Stream.iterate(seed, n -> seed * n + c).limit(100).collect(Collectors.toList());
+    //Method 1
+    static String getNamesWithOddIndexes(List<String> namesList) {
+        IntStream oddIndexes = IntStream
+                .iterate(0, i -> i + 2)
+                .limit(namesList.size() % 2 == 0 ? (namesList.size() / 2) : (namesList.size()) / 2 + 1);
+        return oddIndexes
+                .mapToObj(i -> i + 1 + ". " + namesList.get(i))
+                .collect(Collectors.joining(", "));
     }
-    //5
-    public static <T> Stream<T> zip(Stream<T> first, Stream<T> second){
-        List<T> firstList = first.collect(Collectors.toList());
-        List<T> secondList = second.collect(Collectors.toList());
 
-        int minSize;
-        if (firstList.size() >= secondList.size()) {
-            minSize = secondList.size();
-            ;
-        } else {
-            minSize = firstList.size();
+    //Method 2
+    static List<String> getListOfNamesInUpperCaseReverseSorted(List<String> nameList) {
+        return nameList.stream().map(s -> s.toUpperCase(Locale.ROOT)).sorted(Comparator.reverseOrder()).toList();
+    }
+
+    //Method 3
+    static String getSortedStringArrayOfNumbers(String[] array) {
+        return Arrays.stream(array)
+                .flatMap(s -> Arrays.stream(s.split(", ")))
+                .map(Integer::parseInt)
+                .sorted()
+                .map(Object::toString)
+                .collect(Collectors.joining(", "));
+    }
+
+    //Method 4
+    static Stream<Long> getGeneratedStreamOfRandomNumbers(long c, long m, long seed) {
+        return Stream.iterate(seed, x -> (seed * x + c) % m);
+    }
+
+    //Method 5
+    public static <T> Stream<T> zip(Stream<T> first, Stream<T> second) {
+        Stream.Builder<T> builder = Stream.builder();
+
+        var firstIterator = first.iterator();
+        var secondIterator = second.iterator();
+
+        while (firstIterator.hasNext() && secondIterator.hasNext()) {
+            builder.accept(firstIterator.next());
+            builder.accept(secondIterator.next());
         }
-
-        List<T> result = new ArrayList<>();
-
-        for (int i = 0; i < minSize; i++) {
-            result.add(firstList.get(i));
-            result.add(secondList.get(i));
-        }
-
-        return result.stream();
+        return builder.build();
     }
-    }
-
+}
 
